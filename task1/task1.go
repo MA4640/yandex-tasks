@@ -9,64 +9,46 @@ import (
 )
 
 func main() {
-	var N int
-	fmt.Scan(&N)
-	reader := bufio.NewReader(os.Stdin)
-	for i := 0; i < N; i++ {
-		str, _ := reader.ReadString('\n')
-		str = strings.Trim(str, " \n")
+	f, _ := os.Open("test.txt")
+	rd := bufio.NewReader(f)
 
-		//разбиение на подстроки
-		strs := strings.Split(str, ",")
-		var ints []int
+	nstr, _ := rd.ReadString('\n')
+	nstr = strings.Trim(nstr, "\n")
 
-		for _, s := range strs {
-			num, err := strconv.Atoi(s)
-			if err == nil {
-				ints = append(ints, num)
-			}
+	n, _ := strconv.Atoi(nstr)
+
+	for i := 0; i < n; i++ {
+		s, _ := rd.ReadString('\n')
+
+		data := strings.Split(strings.Trim(s, "\n"), ",")
+
+		//Различные символы в ФИО:
+		fio := data[0] + data[1] + data[2]
+		fiorunes := make(map[rune]int)
+		for _, r := range fio {
+			fiorunes[r]++
 		}
 
-		word := strings.Join(strs, "")
-		counts := make(map[rune]int)
-		for _, r := range word {
-			if r >= '0' && r <= '9' {
-				continue
-			}
-			counts[r]++
+		fioRuneCount := len(fiorunes)
+		//Сумма цифр в дне и месяце рождения
+		dateDigitsSum := 0
+		dateDigits := data[3] + data[4]
+		for _, d := range dateDigits {
+			digit, _ := strconv.Atoi(string(d))
+			dateDigitsSum += digit
+		}
+		//Номер в алфавите первой буквы фамилии
+		var nf int
+		if int(fio[0]) >= 65 && int(fio[0]) <= 90 {
+			nf = int(fio[0]) - 64
+		} else if int(fio[0]) >= 97 && int(fio[0]) <= 122 {
+			nf = int(fio[0]) - 96
 		}
 
-		//fmt.Printf("%v", counts)
+		// Конвертация двоичного значения в шестнадцатеричное, оставить только 3 последних разряда
+		val := int64(fioRuneCount + dateDigitsSum*64 + nf*256&0xfff)
 
-		//Подсчитывается количество различных символов в ФИО (регистр важен, А и а — разные символы).
-		//упущена конкатенация (планировала скастить в одну строку в массив рун при помощи карты
-		// (ключ руна - значение количество))
-		//здесь упущен блок
-		p1 := len(counts)
-
-		//Берётся сумма цифр в дне и месяце рождения, умноженная на 64.
-		p2 := 64 * (ints[0]/10 + ints[0]%10 + ints[1]/10 + ints[1]%10)
-
-		//Для первой (по позиции в слове) буквы фамилии определяется её номер в алфавите (в 1-индексации), умноженный (далее!) на 256 (регистр буквы не важен).
-		var p3 int
-		if int(str[0]) >= 65 && int(str[0]) <= 90 {
-			p3 = int(str[0]) - 64
-		} else if int(str[0]) >= 97 && int(str[0]) <= 122 {
-			p3 = int(str[0]) - 96
-		}
-
-		p4 := int64(p1+p2+p3*256) & 0xfff
-
-		// Конвертация двоичного значения в шестнадцатеричное
-		v := strconv.FormatInt(p4, 16)
-
-		//У результата сохраняются только 3 младших разряда (если значимых разрядов меньше, то шифр дополняется до 3-х разрядов ведущими нулями)
-		/*run := []rune(v)
-
-		for i := 3; i > 0; i-- {
-			fmt.Println(string(vrun[len(vrun)-i]))
-		}*/
+		v := strconv.FormatInt(val, 16)
 		fmt.Print(v, " ")
-		//	fmt.Print(" ")
 	}
 }
